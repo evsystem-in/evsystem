@@ -4,7 +4,8 @@ services:
     image: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgresdb}
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
@@ -12,6 +13,7 @@ services:
       - '5432:5432'
     networks:
       - postgres
+      - cloudflare
     restart: unless-stopped
 
   pgadmin:
@@ -28,9 +30,14 @@ services:
       - '${PGADMIN_PORT:-5050}:80'
     networks:
       - postgres
+      - cloudflare
     restart: unless-stopped
+  
+  cloudflare:
+  
 
 networks:
+  cloudflare:
   postgres:
     driver: bridge
 

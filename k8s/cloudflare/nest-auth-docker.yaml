@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nest-auth-docker
+spec:
+  selector:
+    app: nest-auth-docker
+  ports:
+  - port: 3002
+    targetPort: 3000
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nest-auth-docker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nest-auth-docker
+  template:
+    metadata:
+      labels:
+        app: nest-auth-docker
+    spec:
+      containers:
+      - name: nest-auth-docker
+        image: skbhati199/nest-app-docker:latest
+        ports:
+        - containerPort: 3000
