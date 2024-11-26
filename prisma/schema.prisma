@@ -9,85 +9,423 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
+// Add new enums for invitation status
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model OrganizationInvitation {
+  id        String           @id @default(cuid())
+  email     String
+  role      UserRole
+  status    InvitationStatus @default(PENDING)
+  token     String           @unique // For invitation link
+  expiresAt DateTime
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Who sent the invitation
+  invitedById String
+  invitedBy   User   @relation("SentOrgInvitations", fields: [invitedById], references: [id])
+
+  // Organization reference
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([email])
+  @@index([token])
+}
+
+model ProjectInvitation {
+  id        String           @id @default(cuid())
+  email     String
+  role      ProjectRole // New role specific to project
+  status    InvitationStatus @default(PENDING)
+  token     String           @unique // For invitation link
+  expiresAt DateTime
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Who sent the invitation
+  invitedById String
+  invitedBy   User   @relation("SentProjectInvitations", fields: [invitedById], references: [id])
+
+  // Project reference
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@index([email])
+  @@index([token])
+}
+
+// Update User model to include invitation relationships
 model User {
-  uid      String     @id @default(cuid())
-  name     String
-  Location Location[]
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  bookings       Booking[]
+  orders         Order[]
+
+  // Project memberships
+  projectMembers ProjectMember[]
+
+  // Invitation management
+  sentOrgInvitations     OrganizationInvitation[] @relation("SentOrgInvitations")
+  sentProjectInvitations ProjectInvitation[]      @relation("SentProjectInvitations")
+  ChargingSession        ChargingSession[]
+
+  
+}
+
+// Add ProjectRole enum
+enum ProjectRole {
+  PROJECT_ADMIN
+  PROJECT_MANAGER
+  PROJECT_MEMBER
+  PROJECT_VIEWER
+}
+
+// Add ProjectMember model to handle user-project relationships
+model ProjectMember {
+  id        String      @id @default(cuid())
+  role      ProjectRole
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relationships
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+}
+
+// Update Project model to include members and invitations
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relationships
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  locations      Location[]
+
+  // Member management
+  members     ProjectMember[]
+  invitations ProjectInvitation[]
+}
+
+// Update Organization model to include invitations
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  users       User[]
+  projects    Project[]
+  locations   Location[]
+  billings    Billing[]
+  invitations OrganizationInvitation[]
 }
 
 model Location {
-  id              Int    @id @default(autoincrement())
-  locationName    String
-  locationAddress String
+  id        String         @id @default(cuid())
+  name      String
+  address   String
+  city      String
+  state     String
+  country   String
+  zipCode   String
+  latitude  Float
+  longitude Float
+  status    LocationStatus @default(ACTIVE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
-  owner  User   @relation(fields: [userId], references: [uid])
-  userId String
+  // Relationships
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id])
+  stations       Station[]
 }
 
 model Station {
-  id          Int    @id @default(autoincrement())
-  stationName String
+  id                      String @id @default(cuid())
+  name                    String
+  // Vendor Information
+  chargePointVendor       String // e.g., 'AVT-Company'
+  chargePointModel        String // e.g., 'AVT-Express'
+  chargePointSerialNumber String @unique // e.g., 'avt.001.13.1'
+  chargeBoxSerialNumber   String // e.g., 'avt.001.13.1.01'
 
-  chargePoints ChargePoint[]
+  // Technical Details
+  firmwareVersion String // e.g., '0.9.87'
+  iccid           String? // SIM card identifier
+  imsi            String? // Mobile subscriber identifier
 
-  userUid String
+  // Meter Information
+  meterType         String // e.g., 'AVT NQC-ACDC'
+  meterSerialNumber String // e.g., 'avt.001.13.1.01'
+
+  // Status and Timestamps
+  status    StationStatus @default(AVAILABLE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relationships
+  locationId     String
+  location       Location        @relation(fields: [locationId], references: [id])
+  chargingPoints ChargingPoint[]
 }
 
-// chargePointVendor: 'AVT-Company',
-//   chargePointModel: 'AVT-Express',
-//   chargePointSerialNumber: 'avt.001.13.1',
-//   chargeBoxSerialNumber: 'avt.001.13.1.01',
-//   firmwareVersion: '0.9.87',
-//   iccid: '',
-//   imsi: '',
-//   meterType: 'AVT NQC-ACDC',
-//   meterSerialNumber: 'avt.001.13.1.01'
+model ChargingPoint {
+  id        String              @id @default(cuid())
+  name      String
+  status    ChargingPointStatus @default(AVAILABLE)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
 
-model ChargePoint {
-  id String @id @default(cuid())
-
-  chargePointVendor     String
-  chargePointModel      String
-  chargeBoxSerialNumber String
-  firmwareVersion       String
-  iccid                 String
-  imsi                  String
-  meterType             String
-  meterSerialNumber     String
-  connectors            Connector[]
-
-  stationId Int
-  Station   Station @relation(fields: [stationId], references: [id])
-}
-
-enum ConnectorStatus {
-  Available
-  Preparing
-  Charging
-  SuspendedEV
-  SuspendedEVSE
-  Finishing
-  Reserved
-  Faulted
-  Offline
+  // Relationships
+  stationId       String
+  station         Station           @relation(fields: [stationId], references: [id])
+  connectors      Connector[]
+  bookings        Booking[]
+  history         History[]
+  ChargingSession ChargingSession[]
 }
 
 model Connector {
-  id          Int             @default(autoincrement())
-  connectorId String          @unique
-  name        String
-  status      ConnectorStatus @default(Available)
+  id        String          @id @default(cuid())
+  type      ConnectorType
+  power     Float
+  status    ConnectorStatus @default(AVAILABLE)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
-  chargePointId String?
-  ChargePoint   ChargePoint? @relation(fields: [chargePointId], references: [id])
+  // Relationships
+  chargingPointId String
+  chargingPoint   ChargingPoint     @relation(fields: [chargingPointId], references: [id])
+  ChargingSession ChargingSession[]
 }
 
-model SessionChargePoint {
-  sessionId String @id @default(cuid())
+model Billing {
+  id        String      @id @default(cuid())
+  name      String
+  type      BillingType
+  rate      Float
+  currency  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
-  sessionChargeName String
+  // Relationships
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  orders         Order[]
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  amount    Float
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relationships
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  billingId       String
+  billing         Billing          @relation(fields: [billingId], references: [id])
+  booking         Booking?
+  ChargingSession ChargingSession?
+}
+
+model Booking {
+  id        String        @id @default(cuid())
+  startTime DateTime
+  endTime   DateTime
+  status    BookingStatus @default(SCHEDULED)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relationships
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  chargingPointId String
+  chargingPoint   ChargingPoint     @relation(fields: [chargingPointId], references: [id])
+  orderId         String            @unique
+  order           Order             @relation(fields: [orderId], references: [id])
+  ChargingSession ChargingSession[]
+
+  
+}
+
+model History {
+  id             String   @id @default(cuid())
+  startTime      DateTime
+  endTime        DateTime
+  energyConsumed Float
+  cost           Float
+  createdAt      DateTime @default(now())
+
+  // Relationships
+  chargingPointId String
+  chargingPoint   ChargingPoint @relation(fields: [chargingPointId], references: [id])
+}
+
+// Add new enum for charging types
+enum ChargingType {
+  FULL_CHARGING // Charge until battery is full
+  AMOUNT_BASED // Charge for specific amount (kWh)
+  TIME_BASED // Charge for specific duration
+}
+
+// Add new enum for charging status
+enum ChargingSessionStatus {
+  INITIATED
+  CHARGING
+  COMPLETED
+  STOPPED
+  FAILED
+}
+
+// Add ChargingSession model
+model ChargingSession {
+  id           String                @id @default(cuid())
+  chargingType ChargingType
+  status       ChargingSessionStatus @default(INITIATED)
+
+  // Common fields for all charging types
+  startTime   DateTime
+  endTime     DateTime? // Nullable for ongoing sessions
+  totalEnergy Float? // Total kWh delivered
+  initialSoC  Float? // Starting State of Charge %
+  finalSoC    Float? // Ending State of Charge %
+
+  // Specific parameters based on charging type
+  targetAmount   Float? // For AMOUNT_BASED: target kWh
+  targetDuration Int? // For TIME_BASED: duration in minutes
+
+  // Billing information
+  pricePerKwh    Float
+  pricePerMinute Float?
+  totalCost      Float?
+  currency       String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  chargingPointId String
+  chargingPoint   ChargingPoint @relation(fields: [chargingPointId], references: [id])
+
+  connectorId String
+  connector   Connector @relation(fields: [connectorId], references: [id])
+
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+
+  // Transaction/payment info
+  orderId String? @unique
+  order   Order?  @relation(fields: [orderId], references: [id])
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum LocationStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum StationStatus {
+  AVAILABLE
+  OCCUPIED
+  OFFLINE
+  MAINTENANCE
+}
+
+enum ChargingPointStatus {
+  AVAILABLE
+  CHARGING
+  RESERVED
+  OFFLINE
+  MAINTENANCE
+}
+
+enum ConnectorType {
+  TYPE1
+  TYPE2
+  CCS1
+  CCS2
+  CHADEMO
+}
+
+enum ConnectorStatus {
+  AVAILABLE
+  IN_USE
+  OFFLINE
+  MAINTENANCE
+}
+
+enum BillingType {
+  PER_KWH
+  PER_MINUTE
+  FLAT_RATE
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum BookingStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }

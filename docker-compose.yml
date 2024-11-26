@@ -33,7 +33,6 @@ services:
       - cloudflare
     restart: unless-stopped
   
-  cloudflare:
   
 
 networks:
