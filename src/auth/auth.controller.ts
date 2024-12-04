@@ -19,6 +19,7 @@ import {
   RegisterDto,
   RequestPasswordResetDto,
 } from './dto/auth.dto';
+import { Public } from 'src/decorators/public-endpoint.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -41,6 +42,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  // @Public()
   @Post('login')
   @UseGuards(LocalAuthGuard)
   @ApiOperation({ summary: 'Login with email and password' })

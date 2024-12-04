@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .button.reject {
+            background-color: #dc3545;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Project Invitation</h1>
+    </div>
+    
+    <div class="content">
+        <p>Hello,</p>
+        
+        <p><strong>{{inviterName}}</strong> has invited you to join the project <strong>{{projectName}}</strong> as a <strong>{{roleToString role}}</strong>.</p>
+        
+        <p>As a {{roleToString role}}, you will be able to:</p>
+        <ul>
+            {{#if (eq role 'PROJECT_ADMIN')}}
+                <li>Manage project settings and configuration</li>
+                <li>Invite and manage team members</li>
+                <li>Access all project features and data</li>
+            {{else if (eq role 'PROJECT_MANAGER')}}
+                <li>Manage project resources and tasks</li>
+                <li>View project analytics and reports</li>
+                <li>Collaborate with team members</li>
+            {{else}}
+                <li>View project information</li>
+                <li>Collaborate with team members</li>
+                <li>Participate in project activities</li>
+            {{/if}}
+        </ul>
+
+        <p>This invitation will expire on {{formatDate expiresAt}}.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{acceptUrl}}" class="button">Accept Invitation</a>
+            <a href="{{rejectUrl}}" class="button reject">Decline</a>
+        </div>
+
+        <p>If the buttons above don't work, you can copy and paste these links into your browser:</p>
+        <p>Accept: {{acceptUrl}}</p>
+        <p>Decline: {{rejectUrl}}</p>
+    </div>
+
+    <div class="footer">
+        <p>This invitation was sent from {{appName}}. If you did not expect this invitation, you can safely ignore it.</p>
+        <p>For support, please contact {{supportEmail}}</p>
+        <p>&copy; {{year}} {{appName}}. All rights reserved.</p>
+    </div>
+</body>
+</html>

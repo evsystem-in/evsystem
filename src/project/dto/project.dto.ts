@@ -9,7 +9,7 @@ export class CreateProjectDto {
   description?: string;
   @ApiProperty({ example: 'ACTIVE' })
   status?: ProjectStatus;
-  @ApiProperty({ example: 'Organization ID' })
+  @ApiProperty({ example: 'cm49ouxdp00003w73qder0ase' })
   organizationId: string;
 }
 

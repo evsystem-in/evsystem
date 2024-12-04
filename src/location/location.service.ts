@@ -4,18 +4,14 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, Location, LocationStatus } from '@prisma/client';
-import { PrismaHelpers } from 'src/prisma/prisma-helper.service';
+import { Prisma, Location } from '@prisma/client';
 
 @Injectable()
 export class LocationService {
-  constructor(
-    private prisma: PrismaService,
-    private prismaHelpers: PrismaHelpers,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async createLocation(data: Prisma.LocationCreateInput): Promise<Location> {
-    return await this.prismaHelpers.createLocation(data);
+    return this.prisma.location.create({ data });
   }
 
   async findAllLocations(params: {
