@@ -1,19 +1,20 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcryptjs';
+import { TokenResponse } from './dto/auth-response';
+import { RegisterDto } from './dto/auth.dto';
 
 // Define types for JWT payload and tokens
 export interface JwtPayload {
   sub: string;
   email: string;
   role: string;
-}
-
-export interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
 }
 
 @Injectable()
@@ -23,6 +24,48 @@ export class AuthService {
     private jwtService: JwtService,
     private userService: UserService,
   ) {}
+
+  // auth/auth.service.ts
+  async register(registerDto: RegisterDto): Promise<TokenResponse> {
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: registerDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+
+    try {
+      // Create the user
+      const newUser = await this.prisma.user.create({
+        data: {
+          ...registerDto,
+          role: registerDto.role,
+          password: hashedPassword,
+        },
+      });
+
+      // Generate tokens for the new user
+      const tokens = await this.generateTokens(newUser);
+
+      // Remove password from user object
+      const { password, ...userWithoutPassword } = newUser;
+
+      return {
+        user: userWithoutPassword,
+        ...tokens,
+      };
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('User with this email already exists');
+      }
+      throw error;
+    }
+  }
 
   // Validate user credentials and return tokens if valid
   async validateUser(email: string, password: string): Promise<any> {
@@ -42,9 +85,11 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    console.log(user);
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(isPasswordValid);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -74,12 +119,13 @@ export class AuthService {
 
     // Store refresh token hash in database
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    await this.prisma.user.update({
+    const userR = await this.prisma.user.update({
       where: { id: user.id },
       data: { refreshToken: hashedRefreshToken },
     });
 
     return {
+      user: userR,
       accessToken,
       refreshToken,
     };

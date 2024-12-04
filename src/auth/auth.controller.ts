@@ -8,45 +8,38 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { AuthService, TokenResponse } from './auth.service';
+import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-
-// DTOs for request validation
-export class LoginDto {
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  @MinLength(8)
-  password: string;
-}
-
-export class RefreshTokenDto {
-  @IsString()
-  refreshToken: string;
-}
-
-export class RequestPasswordResetDto {
-  @IsEmail()
-  email: string;
-}
-
-export class ResetPasswordDto {
-  @IsString()
-  token: string;
-
-  @IsString()
-  @MinLength(8)
-  newPassword: string;
-}
+import { TokenResponse } from './dto/auth-response';
+import {
+  LoginDto,
+  RefreshTokenDto,
+  RegisterDto,
+  RequestPasswordResetDto,
+} from './dto/auth.dto';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  // auth/auth.controller.ts
+  @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'User successfully registered',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'Email already exists',
+  })
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() registerDto: RegisterDto): Promise<TokenResponse> {
+    return this.authService.register(registerDto);
+  }
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
