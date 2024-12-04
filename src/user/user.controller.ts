@@ -24,8 +24,6 @@ import {
   UserResponse,
 } from './user.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { Prisma, UserRole } from '@prisma/client';
 import {
   IsString,
@@ -35,6 +33,8 @@ import {
   IsEnum,
   IsOptional,
 } from 'class-validator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/guards/roles.decorator';
 
 // Request validation DTOs
 export class ChangePasswordDto {

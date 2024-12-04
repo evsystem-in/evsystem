@@ -11,11 +11,6 @@ export class PrismaService extends PrismaClient {
   }
 
   // authorize charging point id
-  async authorizeChargePoint(chargePointVendor: string) {
-    return await this.chargePoint.findFirstOrThrow({
-      where: { chargePointVendor },
-    });
-  }
 
   // update charge point
 }

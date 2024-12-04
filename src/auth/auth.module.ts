@@ -11,6 +11,8 @@ import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
+    UserModule,
+    PrismaModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -20,8 +22,6 @@ import { PrismaModule } from '../prisma/prisma.module';
       }),
       inject: [ConfigService],
     }),
-    UserModule,
-    PrismaModule,
   ],
   providers: [
     AuthService,
