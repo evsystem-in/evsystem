@@ -9,9 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 // Add new enums for invitation status
@@ -78,11 +78,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  refreshToken String
+
   // Relationships
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  bookings       Booking[]
-  orders         Order[]
+  organization Organization[]
+  bookings     Booking[]
+  orders       Order[]
 
   // Project memberships
   projectMembers ProjectMember[]
@@ -91,8 +92,6 @@ model User {
   sentOrgInvitations     OrganizationInvitation[] @relation("SentOrgInvitations")
   sentProjectInvitations ProjectInvitation[]      @relation("SentProjectInvitations")
   ChargingSession        ChargingSession[]
-
-  
 }
 
 // Add ProjectRole enum
@@ -171,10 +170,10 @@ model Location {
   updatedAt DateTime       @updatedAt
 
   // Relationships
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  projectId      String
-  project        Project      @relation(fields: [projectId], references: [id])
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id])
   stations       Station[]
 }
 
@@ -284,8 +283,6 @@ model Booking {
   orderId         String            @unique
   order           Order             @relation(fields: [orderId], references: [id])
   ChargingSession ChargingSession[]
-
-  
 }
 
 model History {

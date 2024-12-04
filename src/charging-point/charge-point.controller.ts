@@ -1,14 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ChargePointService } from './charge-point.service';
 import { CreateChargePointDto } from './dto/create-charge-point.dto';
 import { UpdateChargePointDto } from './dto/update-charge-point.dto';
+import { Prisma } from '@prisma/client';
 
-@Controller('charge-point')
+@Controller('charging-point')
 export class ChargePointController {
   constructor(private readonly chargePointService: ChargePointService) {}
 
   @Post()
-  create(@Body() createChargePointDto: CreateChargePointDto) {
+  create(@Body() createChargePointDto: Prisma.ChargingPointCreateInput) {
     return this.chargePointService.create(createChargePointDto);
   }
 
@@ -19,11 +28,14 @@ export class ChargePointController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.chargePointService.findOne(+id);
+    return this.chargePointService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateChargePointDto: UpdateChargePointDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateChargePointDto: UpdateChargePointDto,
+  ) {
     return this.chargePointService.update(+id, updateChargePointDto);
   }
 
