@@ -9,6 +9,8 @@ import { LocationModule } from './location/location.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { OrgModule } from './org/org.module';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { ConfigModule } from '@nestjs/config';
     LocationModule,
     UserModule,
     AuthModule,
+    OrgModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [AppService],

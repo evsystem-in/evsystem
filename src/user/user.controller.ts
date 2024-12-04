@@ -33,7 +33,7 @@ import {
   IsEnum,
   IsOptional,
 } from 'class-validator';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { RolesGuard } from 'src/auth/decorators/roles.guard';
 import { Roles } from 'src/auth/guards/roles.decorator';
 
 // Request validation DTOs
