@@ -31,6 +31,7 @@ export class RequestPasswordResetDto {
 }
 
 export class ResetPasswordDto {
+  @ApiProperty({ example: 'skbhati199@gmail.com' })
   @IsString()
   token: string;
 
@@ -68,4 +69,11 @@ export class RegisterDto {
   @IsEnum(UserRole)
   @IsOptional()
   role?: UserRole = UserRole.USER;
+}
+
+export class ForgotPasswordDto {
+  @ApiProperty({ example: 'skbhati199@gmail.com!' })
+  @IsEmail()
+  @IsString()
+  email: string;
 }

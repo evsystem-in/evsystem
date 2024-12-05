@@ -10,6 +10,8 @@ import * as bcrypt from 'bcryptjs';
 import { TokenResponse } from './dto/auth-response';
 import { RegisterDto } from './dto/auth.dto';
 import { EmailVerificationService } from 'src/mail/email-verification.service';
+import { MailService } from 'src/mail/mail.service';
+import { ConfigService } from '@nestjs/config';
 
 // Define types for JWT payload and tokens
 export interface JwtPayload {
@@ -21,9 +23,11 @@ export interface JwtPayload {
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly configService: ConfigService,
     private prisma: PrismaService,
     private jwtService: JwtService,
     private userService: UserService,
+    private mailService: MailService,
     private emailVerificationService: EmailVerificationService,
   ) {}
 
@@ -73,7 +77,11 @@ export class AuthService {
   }
 
   // Validate user credentials and return tokens if valid
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(
+    email: string,
+    password: string,
+    provider?: string,
+  ): Promise<any> {
     // Find user by email
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -89,6 +97,14 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.emailVerified) {
+      throw new UnauthorizedException('Email not verified');
+    }
+
+    if (user.provider == provider) {
+      return user;
     }
 
     // Verify password
@@ -200,5 +216,37 @@ export class AuthService {
     };
 
     return this.jwtService.signAsync(payload, { expiresIn: '1h' });
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    try {
+      const user = await this.prisma.user.findUnique({ where: { email } });
+      if (!user) return;
+
+      const token = crypto.randomUUID().replaceAll('-', '');
+
+      const expires = new Date();
+      expires.setHours(expires.getHours() + 1);
+
+      await this.prisma.passwordReset.create({
+        data: {
+          userId: user.id,
+          token: await bcrypt.hash(token, 10),
+          expiresAt: expires,
+        },
+      });
+
+      await this.mailService.sendPasswordReset({
+        to: user.email,
+        userName: `${user.firstName} ${user.lastName}`,
+        resetUrl: `${this.configService.get('APP_URL')}/reset-password?token=${token}`,
+        expiresAt: expires,
+        appName: this.configService.get('APP_NAME'),
+        supportEmail: this.configService.get('SUPPORT_EMAIL'),
+        year: new Date().getFullYear(),
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 }

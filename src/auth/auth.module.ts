@@ -15,6 +15,7 @@ import { OAuthService } from './oauth.service';
 
 @Module({
   imports: [
+    ConfigModule,
     UserModule,
     PrismaModule,
     PassportModule,

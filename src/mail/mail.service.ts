@@ -123,7 +123,7 @@ export class MailService {
     });
 
     await this.sendMail({
-      to: context.userName,
+      to: context.to,
       subject: 'Reset Your Password',
       html,
     });

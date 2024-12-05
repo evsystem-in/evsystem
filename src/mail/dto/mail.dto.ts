@@ -18,10 +18,22 @@ export interface ProjectInvitationContext extends EmailBaseContext {
   rejectUrl?: string; // Made optional since we might generate these URLs internally
 }
 
+// to: user.email,
+//       userName: `${user.firstName} ${user.lastName}`,
+//       resetUrl: `${this.configService.get('APP_URL')}/reset-password?token=${token}`,
+//       expiresAt: expires,
+//       appName: this.configService.get('APP_NAME'),
+//       supportEmail: this.configService.get('SUPPORT_EMAIL'),
+//       year: new Date().getFullYear(),
+
 export interface PasswordResetContext extends EmailBaseContext {
+  to: string;
   userName: string;
   resetUrl: string;
   expiresAt: Date;
+  appName: string;
+  supportEmail: string;
+  year: number;
 }
 
 export class TestProjectInvitationDto

@@ -14,6 +14,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { TokenResponse } from './dto/auth-response';
 import {
+  ForgotPasswordDto,
   LoginDto,
   RefreshTokenDto,
   RegisterDto,
@@ -123,6 +124,20 @@ export class AuthController {
   async getProfile(@Req() req) {
     console.log(req.user);
     return req.user;
+  }
+
+  @ApiOperation({ summary: 'Forgot password' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'If email is registered, you will receive reset instructions.',
+  })
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    await this.authService.forgotPassword(forgotPasswordDto.email);
+    return {
+      message:
+        'If your email is registered, you will receive reset instructions.',
+    };
   }
 
   @Get('google')

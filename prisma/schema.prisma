@@ -97,6 +97,7 @@ model User {
   sentProjectInvitations ProjectInvitation[]      @relation("SentProjectInvitations")
   ChargingSession        ChargingSession[]
   EmailVerification      EmailVerification[]
+  PasswordReset          PasswordReset[]
 }
 
 model EmailVerification {
@@ -105,6 +106,16 @@ model EmailVerification {
   userId    String
   otpHash   String
   verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String
+  used      Boolean  @default(false)
   expiresAt DateTime
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
