@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { StartSessionDto } from './dto/charging-session.dto';
-import { UpdateChargingSessionDto } from './dto/update-charging-session.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletService } from 'src/wallet/wallet.service';
 import {

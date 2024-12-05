@@ -123,7 +123,14 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, description: 'User profile retrieved' })
   async getProfile(@Req() req) {
     console.log(req.user);
-    return req.user;
+    // Get me api wallet, project, booking, orginzation
+
+    // Get me api wallet
+    // Get me api project
+    // Get me api booking
+    // Get me api organization
+
+    return this.authService.getMe(req.user);
   }
 
   @ApiOperation({ summary: 'Forgot password' })

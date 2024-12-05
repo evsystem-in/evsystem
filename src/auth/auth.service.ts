@@ -249,4 +249,18 @@ export class AuthService {
       console.error(error);
     }
   }
+
+  async getMe(user: any) {
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        Wallet: true,
+        organization: true,
+      },
+    });
+
+    delete dbUser.password;
+
+    return dbUser;
+  }
 }
