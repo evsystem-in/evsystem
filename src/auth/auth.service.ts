@@ -36,6 +36,14 @@ export class AuthService {
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: registerDto.email },
+      include: {
+        organization: true,
+        projectMembers: {
+          include: {
+            project: true,
+          },
+        },
+      },
     });
 
     if (existingUser) {
@@ -52,6 +60,14 @@ export class AuthService {
           ...registerDto,
           role: registerDto.role,
           password: hashedPassword,
+          Wallet: {
+            create: {
+              balance: 50,
+            },
+          },
+        },
+        include: {
+          Wallet: true,
         },
       });
 
@@ -87,6 +103,7 @@ export class AuthService {
       where: { email },
       include: {
         organization: true,
+        Wallet: true,
         projectMembers: {
           include: {
             project: true,

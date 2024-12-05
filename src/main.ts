@@ -5,8 +5,20 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
 import { writeFileSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
+import * as basicAuth from 'express-basic-auth';
 
 export function setupSwagger(app: INestApplication): void {
+  if (process.env.NODE_ENV === 'production') {
+    app.use(
+      '/api*',
+      basicAuth({
+        challenge: true,
+        users: {
+          admin: 'ev@1234',
+        },
+      }),
+    );
+  }
   const config = new DocumentBuilder()
     .setTitle('EV Charging Station Management System')
     .setDescription('EV Charging Station Management System API')
