@@ -13,6 +13,11 @@ import { OrgModule } from './org/org.module';
 import { ProjectModule } from './project/project.module';
 import { ProjectInviteModule } from './project-invite/project-invite.module';
 import { MailModule } from './mail/mail.module';
+import { ConnectorModule } from './connector/connector.module';
+import { OrderModule } from './order/order.module';
+import { BookingModule } from './booking/booking.module';
+import { WalletModule } from './wallet/wallet.module';
+import { ChargingSessionModule } from './charging-session/charging-session.module';
 
 @Module({
   imports: [
@@ -28,6 +33,11 @@ import { MailModule } from './mail/mail.module';
     ProjectModule,
     ProjectInviteModule,
     MailModule,
+    ConnectorModule,
+    OrderModule,
+    BookingModule,
+    WalletModule,
+    ChargingSessionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
