@@ -10,7 +10,7 @@ import {
 
 // DTOs for request validation
 export class LoginDto {
-  @ApiProperty({ example: 'sk@sk.com' })
+  @ApiProperty({ example: 'skbhati199@gmail.com' })
   @IsEmail()
   email: string;
 

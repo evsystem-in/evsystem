@@ -78,6 +78,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  emailVerified DateTime?
+
   refreshToken String?
 
   // Relationships
@@ -92,6 +94,18 @@ model User {
   sentOrgInvitations     OrganizationInvitation[] @relation("SentOrgInvitations")
   sentProjectInvitations ProjectInvitation[]      @relation("SentProjectInvitations")
   ChargingSession        ChargingSession[]
+  EmailVerification      EmailVerification[]
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String
+  userId    String
+  otpHash   String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 // Add ProjectRole enum

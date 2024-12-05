@@ -8,6 +8,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -33,13 +34,17 @@ import {
   TestPasswordResetDto,
   TestProjectInvitationDto,
 } from './dto/mail.dto';
+import { EmailVerificationService } from './email-verification.service';
 
 @ApiTags('mail')
 @Controller('mail')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class MailController {
-  constructor(private readonly mailService: MailService) {}
+  constructor(
+    private readonly mailService: MailService,
+    private readonly verificationService: EmailVerificationService,
+  ) {}
 
   @Post('test/project-invitation')
   @Roles(UserRole.ADMIN)
@@ -179,5 +184,21 @@ export class MailController {
         `Failed to generate preview: ${error.message}`,
       );
     }
+  }
+
+  @Post('verify')
+  async verifyEmail(@Body() body: { email: string; otp: string }) {
+    const isValid = await this.verificationService.verifyOTP(
+      body.email,
+      body.otp,
+    );
+    if (!isValid) throw new UnauthorizedException('Invalid or expired OTP');
+    return { message: 'Email verified successfully' };
+  }
+
+  @Post('resend')
+  async resendOTP(@Body() body: { email: string }) {
+    await this.verificationService.resendOTP(body.email);
+    return { message: 'New OTP sent' };
   }
 }

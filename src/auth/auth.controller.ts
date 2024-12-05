@@ -120,6 +120,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: HttpStatus.OK, description: 'User profile retrieved' })
   async getProfile(@Req() req) {
+    console.log(req.user);
     return req.user;
   }
 }

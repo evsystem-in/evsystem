@@ -9,6 +9,7 @@ import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcryptjs';
 import { TokenResponse } from './dto/auth-response';
 import { RegisterDto } from './dto/auth.dto';
+import { EmailVerificationService } from 'src/mail/email-verification.service';
 
 // Define types for JWT payload and tokens
 export interface JwtPayload {
@@ -23,6 +24,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private userService: UserService,
+    private emailVerificationService: EmailVerificationService,
   ) {}
 
   // auth/auth.service.ts
@@ -54,7 +56,10 @@ export class AuthService {
 
       // Remove password from user object
       const { password, ...userWithoutPassword } = newUser;
-
+      await this.emailVerificationService.createVerification(
+        registerDto.email,
+        newUser.id,
+      );
       return {
         user: userWithoutPassword,
         ...tokens,
@@ -85,17 +90,16 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    console.log(user);
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log(isPasswordValid);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // Remove password from response
     const { password: _, ...result } = user;
+
     return result;
   }
 
@@ -110,22 +114,25 @@ export class AuthService {
     // Generate tokens with different expiration times
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        expiresIn: '15m', // Short-lived access token
+        expiresIn: '7d', // Short-lived access token
       }),
       this.jwtService.signAsync(payload, {
-        expiresIn: '7d', // Longer-lived refresh token
+        expiresIn: '30d', // Longer-lived refresh token
       }),
     ]);
 
     // Store refresh token hash in database
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    const userR = await this.prisma.user.update({
+    const userResponse = await this.prisma.user.update({
       where: { id: user.id },
-      data: { refreshToken: hashedRefreshToken },
+      data: { refreshToken: refreshToken },
     });
 
+    const { password, ...userWithoutPassword } = userResponse;
+
+    delete userWithoutPassword.refreshToken;
+
     return {
-      user: userR,
+      user: userWithoutPassword,
       accessToken,
       refreshToken,
     };

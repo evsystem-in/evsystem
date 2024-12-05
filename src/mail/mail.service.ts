@@ -18,7 +18,8 @@ export class MailService {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get('SMTP_HOST'),
       port: this.configService.get('SMTP_PORT'),
-      secure: this.configService.get('SMTP_SECURE') === 'true',
+      ignoreTLS: true,
+      secure: true,
       auth: {
         user: this.configService.get('SMTP_USER'),
         pass: this.configService.get('SMTP_PASS'),
@@ -172,6 +173,18 @@ export class MailService {
       to: context.userName,
       subject: 'Reset Your Password',
       html,
+    });
+  }
+
+  async sendVerificationOTP(context: {
+    to: string;
+    otp: string;
+    expiresAt: Date;
+  }) {
+    await this.sendMail({
+      to: context.to,
+      subject: 'Verify Your Email',
+      html: `Your verification code is: ${context.otp}`,
     });
   }
 }
