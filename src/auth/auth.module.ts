@@ -9,6 +9,9 @@ import { LocalStrategy } from './strategies/local.strategy'; // Add this
 import { UserModule } from '../user/user.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from 'src/mail/mail.module';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { GithubStrategy } from './strategies/github.strategy';
+import { OAuthService } from './oauth.service';
 
 @Module({
   imports: [
@@ -26,9 +29,12 @@ import { MailModule } from 'src/mail/mail.module';
     }),
   ],
   providers: [
+    OAuthService,
     AuthService,
     JwtStrategy,
-    LocalStrategy, // Add this
+    LocalStrategy,
+    GoogleStrategy,
+    GithubStrategy,
   ],
   controllers: [AuthController],
   exports: [AuthService],

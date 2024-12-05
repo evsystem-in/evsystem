@@ -20,6 +20,7 @@ import {
   RequestPasswordResetDto,
 } from './dto/auth.dto';
 import { Public } from 'src/decorators/public-endpoint.decorator';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -121,6 +122,26 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, description: 'User profile retrieved' })
   async getProfile(@Req() req) {
     console.log(req.user);
+    return req.user;
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(@Req() req) {
+    return req.user;
+  }
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  async githubAuth() {}
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubAuthCallback(@Req() req) {
     return req.user;
   }
 }
